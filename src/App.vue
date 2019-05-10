@@ -47,8 +47,8 @@ export default {
       },
       fieldSettings: {
         cellSize: 100,
-        winRow: 3,
-        matrixSize: 3,
+        winRow: 4,
+        matrixSize: 4,
         disabled: false
       },
       highText: '',

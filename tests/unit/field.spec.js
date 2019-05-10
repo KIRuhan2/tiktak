@@ -42,7 +42,8 @@ describe('Field Win Status', () => {
 
     // Test win trace detect correctly.
     field.methods.winStatus.apply(data, [2, 2])
-    expect(data.crossLine).toEqual([[0, 0], [1, 1], [2, 2]])
+    expect(data.crossLine.line).toEqual([[0, 0], [1, 1], [2, 2]])
+    expect(data.crossLine.direction).toEqual('diagonalLeft')
 
     data.matrix = [
       [0, 0, r],
@@ -54,7 +55,8 @@ describe('Field Win Status', () => {
     expect(field.methods.winStatus.apply(data, [2, 0])).toBe(r)
 
     field.methods.winStatus.apply(data, [0, 2])
-    expect(data.crossLine).toEqual([[2, 0], [1, 1], [0, 2]])
+    expect(data.crossLine.line).toEqual([[2, 0], [1, 1], [0, 2]])
+    expect(data.crossLine.direction).toEqual('diagonalRight')
 
     data.matrix = [
       [0, 0, r],
@@ -86,7 +88,8 @@ describe('Field Win Status', () => {
     expect(field.methods.winStatus.apply(data, [0, 0, 4])).toBe(r)
 
     field.methods.winStatus.apply(data, [0, 0, 4])
-    expect(data.crossLine).toEqual([[0, 0], [1, 1], [2, 2], [3, 3]])
+    expect(data.crossLine.line).toEqual([[0, 0], [1, 1], [2, 2], [3, 3]])
+    expect(data.crossLine.direction).toEqual('diagonalLeft')
 
     data.matrix = [
       [0, 0, n, r],
@@ -96,7 +99,7 @@ describe('Field Win Status', () => {
     ]
     expect(field.methods.winStatus.apply(data, [0, 3, 4])).toBe(r)
     field.methods.winStatus.apply(data, [2, 1, 4])
-    expect(data.crossLine).toEqual([[ 3, 0 ], [ 2, 1 ], [ 1, 2 ], [ 0, 3 ]])
+    expect(data.crossLine.line).toEqual([[ 3, 0 ], [ 2, 1 ], [ 1, 2 ], [ 0, 3 ]])
   })
 
   it('Row Status win', () => {
@@ -126,7 +129,8 @@ describe('Field Win Status', () => {
     expect(field.methods.winStatus.apply(data, [0, 0, 4])).toBe(r)
 
     field.methods.winStatus.apply(data, [0, 0, 4])
-    expect(data.crossLine).toEqual([[ 0, 0 ], [ 0, 1 ], [ 0, 2 ], [ 0, 3 ]])
+    expect(data.crossLine.line).toEqual([[ 0, 0 ], [ 0, 1 ], [ 0, 2 ], [ 0, 3 ]])
+    expect(data.crossLine.direction).toEqual('row')
   })
 
   it('Column Status win', () => {

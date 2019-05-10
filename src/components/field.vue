@@ -6,7 +6,7 @@
             @click="makeTurn(rowIndex,cellIndex)"
             :style="{width:`${options.cellSize}px`, height:`${options.cellSize}px`}"
             >
-            <div class="vertical line"></div>
+              <div class="line" :style="lineStyle(rowIndex, cellIndex)"></div>
             </div>
         </div>
     </div>
@@ -19,7 +19,7 @@ export default {
     return {
       turn: 2,
       matrix: [],
-      crossLine: []
+      crossLine: { line: [], direction: '' }
     }
   },
 
@@ -30,15 +30,49 @@ export default {
     cellDisabled () {
       return this.options.disabled ? 'disabled' : ''
     }
+
   },
   methods: {
     restartGame () {
       this.matrix = this.makeMatrix(this.options ? this.options.winRow : 3)
-      this.crossLine = []
+      this.crossLine = { line: [], direction: '' }
       this.turn = 2
     },
     cellStatus (i, j) {
       return ['', 'x', 'o'][this.matrix[i][j]]
+    },
+
+    lineStyle (i, j) {
+      if (!this.crossLine.line.length) return
+      let n = this.options ? this.options.winRow : 3
+      let cellSize = this.options.cellSize
+      let center = this.crossLine.line[Math.floor(this.crossLine.line.length / 2)]
+      let direction = this.crossLine.direction
+      console.log('Center: ', center || this.crossLine.line)
+      if (center[0] === i && center[1] === j) {
+        let lineStyle = function (width, rotate, height = cellSize / 8) {
+          this.width = width - cellSize / 2 + 'px'
+          this.height = height + 'px'
+          this.transform = `rotate(${rotate || 0}deg)`
+          this.backgroundColor = '#000'
+          if (n % 2 == 0) {
+            let translate = {
+              diagonalRight: `translate(-${cellSize / 2}px, ${cellSize / 2}px) rotate(${rotate || 0}deg)`,
+              diagonalLeft: `translate(-${cellSize / 2}px, -${cellSize / 2}px) rotate(${rotate || 0}deg)`,
+              row: `translateX(-${cellSize / 2}px)`,
+              column: `translateY(-${cellSize / 2}px) rotate(90deg)`
+            }
+            this.transform = translate[direction]
+          }
+        }
+        let options = {
+          diagonalRight: new lineStyle(Math.sqrt(2 * (cellSize * n) ** 2), -45),
+          diagonalLeft: new lineStyle(Math.sqrt(2 * (cellSize * n) ** 2), 45),
+          row: new lineStyle(cellSize * n),
+          column: new lineStyle(cellSize * n, 90)
+        }
+        return options[direction]
+      }
     },
     makeMatrix (n) {
       return Array(this.options.matrixSize || 3).fill(null).map(() => Array(this.options.matrixSize || 3).fill(0))
@@ -90,7 +124,8 @@ export default {
 
       win.status.forEach((e, i) => {
         if (e.match(cellReg)) {
-          this.crossLine = win.indexes[i].slice(e.match(cellReg).index, e.match(cellReg).index + n)
+          this.crossLine.line = win.indexes[i].slice(e.match(cellReg).index, e.match(cellReg).index + n)
+          this.crossLine.direction = ['diagonalRight', 'diagonalLeft', 'row', 'column'][i]
         }
       })
       return Object.values(win.status).find(x => x.match(cellReg)) ? cell : false
@@ -131,10 +166,8 @@ export default {
     .row{
         display: flex;
     }
-    .vertical{
-      background-color: #000;
-      width: 200%;
-      transform: rotate(-45deg);
+    .line{
+      position: absolute;
     }
     .horiz{
 
