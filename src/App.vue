@@ -70,7 +70,7 @@ export default {
       this.$refs.field.restartGame()
     },
     gameEnd (winner) {
-      this.highText = winner === false ? 'Ничья!' : 'Победа!'
+      this.highText = winner === false ? 'Draw!' : 'Win!'
       this.winnerClass = ['', 'x', 'o'][winner || 0]
       this.fieldSettings.disabled = true
       this.restartButton = true
