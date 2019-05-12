@@ -23,18 +23,25 @@ export default {
     }
   },
 
-  created () {
-    this.matrix = this.makeMatrix(this.options ? this.options.winRow : 3)
+  mounted () {
+    console.log(this.options.matrixSize)
+    this.matrix = this.makeMatrix(this.options ? this.options.matrixSize : 3)
   },
   computed: {
     cellDisabled () {
       return this.options.disabled ? 'disabled' : ''
     }
-
   },
   methods: {
+    defaultCellSize(matrixSize=3){
+      console.log(matrixSize)
+      let maxWithWidth = this.window.width/matrixSize-10
+      let maxWithHeight  = (this.window.height-140)/matrixSize
+      maxWithWidth = maxWithWidth > 100 ? 100 : maxWithWidth < 20 ? 20 : maxWithWidth
+      return Math.floor(Math.min(maxWithHeight, maxWithWidth))
+    },     
     restartGame () {
-      this.matrix = this.makeMatrix(this.options ? this.options.winRow : 3)
+      this.matrix = this.makeMatrix(this.options ? this.options.matrixSize : 3)
       this.crossLine = { line: [], direction: '' }
       this.turn = 2
     },
@@ -48,7 +55,6 @@ export default {
       let cellSize = this.options.cellSize
       let center = this.crossLine.line[Math.floor(this.crossLine.line.length / 2)]
       let direction = this.crossLine.direction
-      console.log('Center: ', center || this.crossLine.line)
       if (center[0] === i && center[1] === j) {
         let lineStyle = function (width, rotate, height = cellSize / 8) {
           this.width = width - cellSize / 2 + 'px'
@@ -75,7 +81,7 @@ export default {
       }
     },
     makeMatrix (n) {
-      return Array(this.options.matrixSize || 3).fill(null).map(() => Array(this.options.matrixSize || 3).fill(0))
+      return Array(+this.options.matrixSize || 3).fill(null).map(() => Array(this.options.matrixSize || 3).fill(0))
     },
     makeTurn (i, j) {
       const flat = (arr, depth = Infinity, arr2 = []) => {
@@ -144,6 +150,8 @@ export default {
         align-items: center;
         width: 100px;
         height: 100px;
+        will-change: width,height;
+
         background: #fff;
         outline: 1px solid #000;
         background-repeat: no-repeat;
@@ -159,8 +167,8 @@ export default {
     }
 
     .field{
-        display: flex;
-        align-items: center;
+        -webkit-box-align: center;
+        display: -webkit-box;
         flex-direction: column;
     }
     .row{
@@ -169,15 +177,7 @@ export default {
     .line{
       position: absolute;
     }
-    .horiz{
 
-    }
-    .diagLeft{
-
-    }
-    .diagRight{
-
-    }
     .x{
         background-image: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='UTF-8'%3F%3E%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 48 48' version='1.1' width='48px' height='48px'%3E%3Cg id='surface1'%3E%3Cpath style=' fill:%23F44336;' d='M 36.019531 8.445313 L 39.558594 11.980469 L 11.980469 39.554688 L 8.445313 36.019531 Z '/%3E%3Cpath style=' fill:%23F44336;' d='M 39.554688 36.023438 L 36.019531 39.558594 L 8.445313 11.976563 L 11.980469 8.441406 Z '/%3E%3C/g%3E%3C/svg%3E%0A");
     }
