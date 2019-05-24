@@ -12,11 +12,14 @@
     </div>
 </template>
 <script>
+import io from 'socket.io-client'
+
 export default {
   name: 'field',
   props: ['options'],
   data: function () {
     return {
+      socket: io('localhost:3001'),
       turn: 2,
       matrix: [],
       crossLine: { line: [], direction: '' }
@@ -24,7 +27,7 @@ export default {
   },
 
   mounted () {
-    console.log(this.options.matrixSize)
+    console.log(this.$router)
     this.matrix = this.makeMatrix(this.options ? this.options.matrixSize : 3)
   },
   computed: {
@@ -33,13 +36,13 @@ export default {
     }
   },
   methods: {
-    defaultCellSize(matrixSize=3){
+    defaultCellSize (matrixSize = 3) {
       console.log(matrixSize)
-      let maxWithWidth = this.window.width/matrixSize-10
-      let maxWithHeight  = (this.window.height-140)/matrixSize
+      let maxWithWidth = this.window.width / matrixSize - 10
+      let maxWithHeight = (this.window.height - 140) / matrixSize
       maxWithWidth = maxWithWidth > 100 ? 100 : maxWithWidth < 20 ? 20 : maxWithWidth
       return Math.floor(Math.min(maxWithHeight, maxWithWidth))
-    },     
+    },
     restartGame () {
       this.matrix = this.makeMatrix(this.options ? this.options.matrixSize : 3)
       this.crossLine = { line: [], direction: '' }
