@@ -43,8 +43,11 @@
 <script>
 import io from 'socket.io-client'
 import Game from '@/views/Game.vue'
+import {functions} from '@/mixins/functions'
+
 export default {
   name: 'home',
+  mixins: [functions],
   data () {
     return {
       gameType: 'open',
@@ -77,11 +80,8 @@ export default {
   methods:{
     createGame(){
       if(this.fieldSize < 3 || this.winCondition < 3) return
-      function createId(){
-        const abc = 'abcdefghijklmnopqrstuvw1234567890'
-        return Array(8).fill().map(x=>abc[Math.floor(Math.random()*(abc.length-1))]).join('')
-      }
-      const id = createId()
+
+      const id = this.createId()
       console.log(id)
       this.socket.emit('CREATE_GAME', {
         id,
@@ -95,9 +95,7 @@ export default {
 }
 </script>
 <style scoped>
-  .home{
-    font-family: sans-serif;
-  }
+
   .home ul{
     display: flex;
     flex-wrap: wrap;

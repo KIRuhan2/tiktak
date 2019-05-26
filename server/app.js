@@ -15,7 +15,7 @@ class Game{
 }
 
 class User{
-    constructor(id, role,name){
+    constructor(id, name, role){
         this.name = name
         this.id = id
         this.status = 'online'
@@ -32,27 +32,27 @@ class User{
 let games = []
 
 io.on('connection', socket=>{
-    socket.on('JOIN_GAME', game_id=>{
-        socket.join(game_id)
-        const gameToJoin = games.find(x=>x.game.id===game_id)
+    socket.on('JOIN_GAME', data=>{
+        socket.join(data.gameId)
+        const gameToJoin = games.find(x=>x.game.id === data.gameId)
         if(!gameToJoin){
             socket.emit('WRONG_ID_404')
             return
         }
-        socket.join(gameToJoin[game_id])
+        socket.join(gameToJoin[data.gameId])
         let joinedUser
-        if(gameToJoin.users.filter(user=>user.role==='player').length < 2){
-            joinedUser = new User(socket.id, 'player')
+        if(gameToJoin.users.filter(user=>user.role === 'player').length < 2){
+            joinedUser = new User(data.id, data.name, 'player')
         }else{
-            joinedUser = new User(socket.id, 'spectator')
+            joinedUser = new User(data.id, data.name, 'spectator')
         }
         gameToJoin.users.push(joinedUser)
         socket.emit('JOINED', gameToJoin.users)
-        socket.to(game_id).emit('USER_JOIN', joinedUser)
+        socket.to(data.gameId).emit('USER_JOIN', joinedUser)
 
         socket.on('disconnect', ()=>{
             gameToJoin.users.find(x=>x.id === joinedUser.id).disconencted()
-            socket.to(game_id).emit('USER_DISCONNECTED', joinedUser)
+            socket.to(data.gameId).emit('USER_DISCONNECTED', joinedUser)
         })
 
     })

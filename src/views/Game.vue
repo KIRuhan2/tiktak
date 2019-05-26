@@ -113,8 +113,8 @@ export default {
     }
   },
   mounted () {
-    this.gameID = this.$route.params.id
-    if (this.gameID === 'solo') {
+    this.gameId = this.$route.params.id
+    if (this.gameId === 'solo') {
       this.fieldOverflowHandle.solo = true
       this.gameOn = true
     }
@@ -131,8 +131,11 @@ export default {
         document.querySelector('button.settings').focus()
       }
     })
-
-    this.socket.emit('JOIN_GAME', this.gameID)
+    this.socket.emit('JOIN_GAME', {
+      gameId : this.gameId, 
+      name: localStorage.getItem('name'),
+      id: localStorage.getItem('id')
+    })
 
     this.socket.on('WRONG_ID_404', ()=>{
       this.error.isError = true
@@ -152,6 +155,7 @@ export default {
       console.log('Someone Joined')
       this.users.push(user)
     })
+
   },
   computed:{
     origin(){
@@ -218,7 +222,6 @@ export default {
    margin: 0;
  }
 #app{
-  font-family: sans-serif;
   font-size: 45px;
 }
 
@@ -301,14 +304,12 @@ button{
 }
 
 .status{
-  font-family: sans-serif;
   padding-left: 10px;
   font-size: 48px;
 }
 
 .sidepanel{
   z-index: 1;
-  font-family: sans-serif;
   position: fixed;
   transform: translateX(-100%);
   overflow: hidden;

@@ -4,6 +4,7 @@
     border: 0;
 }
 body{
+    font-family: sans-serif;
     margin: 0;
 }
 
@@ -29,6 +30,7 @@ body{
     padding: .4em;
     border: 2px solid #000;
 }
+
 
 .button_center{
     margin: 0 auto;
