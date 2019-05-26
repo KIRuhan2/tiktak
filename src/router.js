@@ -14,10 +14,11 @@ export default new Router({
       component: Home
     },
     {
-      path:'/solo',
+      path: '/:id',
       name: 'game',
-      component: Game
-    }
+      component: Game,
+      props: true
+    },
 
   ]
 })

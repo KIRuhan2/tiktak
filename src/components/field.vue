@@ -27,7 +27,6 @@ export default {
   },
 
   mounted () {
-    console.log(this.$router)
     this.matrix = this.makeMatrix(this.options ? this.options.matrixSize : 3)
   },
   computed: {
@@ -59,12 +58,12 @@ export default {
       let center = this.crossLine.line[Math.floor(this.crossLine.line.length / 2)]
       let direction = this.crossLine.direction
       if (center[0] === i && center[1] === j) {
-        let lineStyle = function (width, rotate, height = cellSize / 8) {
+        let LineStyle = function (width, rotate, height = cellSize / 8) {
           this.width = width - cellSize / 2 + 'px'
           this.height = height + 'px'
           this.transform = `rotate(${rotate || 0}deg)`
           this.backgroundColor = '#000'
-          if (n % 2 == 0) {
+          if (n % 2 === 0) {
             let translate = {
               diagonalRight: `translate(-${cellSize / 2}px, ${cellSize / 2}px) rotate(${rotate || 0}deg)`,
               diagonalLeft: `translate(-${cellSize / 2}px, -${cellSize / 2}px) rotate(${rotate || 0}deg)`,
@@ -75,10 +74,10 @@ export default {
           }
         }
         let options = {
-          diagonalRight: new lineStyle(Math.sqrt(2 * (cellSize * n) ** 2), -45),
-          diagonalLeft: new lineStyle(Math.sqrt(2 * (cellSize * n) ** 2), 45),
-          row: new lineStyle(cellSize * n),
-          column: new lineStyle(cellSize * n, 90)
+          diagonalRight: new LineStyle(Math.sqrt(2 * (cellSize * n) ** 2), -45),
+          diagonalLeft: new LineStyle(Math.sqrt(2 * (cellSize * n) ** 2), 45),
+          row: new LineStyle(cellSize * n),
+          column: new LineStyle(cellSize * n, 90)
         }
         return options[direction]
       }
