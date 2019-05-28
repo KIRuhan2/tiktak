@@ -1,5 +1,6 @@
 <template>
   <div class="home">
+    <SideSettings />
     <div class="title">
       <h1>TikTakToe</h1>
       <div class="image"></div>
@@ -13,7 +14,7 @@
           <button class = "button">Search for game</button>
         </li>
         <li>
-          <button @click="$router.push('/solo')" class = "button">Take a game</button>
+          <button @click="$router.push('game/solo')" class = "button">Take a game</button>
         </li>
       </ul>
     </nav>
@@ -43,10 +44,15 @@
 <script>
 import io from 'socket.io-client'
 import Game from '@/views/Game.vue'
+
+import SideSettings from '@/components/SideSettings.vue'
 import {functions} from '@/mixins/functions'
 
 export default {
   name: 'home',
+  components:{
+    SideSettings
+  },
   mixins: [functions],
   data () {
     return {
@@ -89,7 +95,7 @@ export default {
         winCondition: this.winCondition,
       })
       this.socket.close()
-      this.$router.push(id)
+      this.$router.push('game/'+id)
     }
   }
 }

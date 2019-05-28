@@ -5,13 +5,15 @@
         <div class="modal__close__line"></div>
         <div class="modal__close__line"></div>
       </div>
-      <Auth @Logined = "logined" class= "auth"/>
+      <Auth class= "auth"/>
     </div>
     <router-view/>
   </div>
 </template>
 <script>
 import Auth from '@/components/Auth.vue'
+import { EventBus } from './main.js'
+
 export default {
   name: 'App',
   components: {
@@ -20,19 +22,27 @@ export default {
   data(){
     return{
       authOk: false,
-      name: undefined,
     }
   },
-  methods:{
-    logined(){
-      this.name = localStorage.getItem('name')
-      this.id = localStorage.getItem('id')
-      this.authOk = true
+  computed:{
+    name(){
+      return this.$store.state.name
+    },
+    id(){
+      return this.$store.state.id
     }
   },
   mounted(){
-    this.name = localStorage.getItem('name')
-    this.id = localStorage.getItem('id')
+    EventBus.$on('Logined', this.logined)
+  },
+  methods:{
+    logined(){
+      this.authOk = true
+    }
+  },
+  created(){
+    this.$store.commit('setName',localStorage.getItem('name') )
+    this.$store.commit('setId',localStorage.getItem('id') )
     this.authOk = !!this.id && !!this.name
   }
 

@@ -3,7 +3,11 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './styles/style.css'
+
+export const EventBus = new Vue()
+
 Vue.config.productionTip = false
+
 
 new Vue({
   router,

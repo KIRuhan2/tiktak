@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
 import Game from '@/views/Game.vue'
+import List from '@/components/SideSettings.vue'
 Vue.use(Router)
 
 export default new Router({
@@ -14,11 +15,17 @@ export default new Router({
       component: Home
     },
     {
-      path: '/:id',
+      path: '/game/:id',
       name: 'game',
       component: Game,
       props: true
     },
+    {
+      path: '/list',
+      name: 'list',
+      component: List,
+      props: true
+    },    
 
   ]
 })

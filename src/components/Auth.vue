@@ -4,7 +4,7 @@
             <legend>Login From</legend>
             <div class ="authForm__item">
                 <label for="username">Username:</label>
-                <input v-model="name" id="username" type="text" placeholder="Guest"/>
+                <input v-model="inputName" id="username" type="text" placeholder="Guest"/>
             </div>
             <button @click="submit()" class = "button button_small">Login</button>
         </fieldset>
@@ -12,21 +12,26 @@
 </template>
 <script>
 import {functions} from '@/mixins/functions'
+import { EventBus } from '@/main.js'
+
 export default {
     name:'Auth',
     mixins:[functions],
     data(){
         return{
-            name: ''
+            inputName: ''
         }
     },
     methods:{
         submit(){
             let id = this.createId()
-            localStorage.setItem('name', this.name)
+            if(this.inputName === '')
+                this.inputName = 'Guest#'+Array(4).fill().map(x=>Math.floor(Math.random()*10)).join('')          
+            localStorage.setItem('name', this.inputName)
             localStorage.setItem('id', id)
-            if(this.name === '') this.name = 'Guest#'+id
-            this.$emit('Logined', {name, id})
+            this.$store.commit('setName', this.inputName)
+            this.$store.commit('setId', id)
+            EventBus.$emit('Logined', {name:this.inputName, id})
         }
     }
 }

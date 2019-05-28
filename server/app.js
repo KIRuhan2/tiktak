@@ -32,32 +32,36 @@ class User{
 let games = []
 
 io.on('connection', socket=>{
-    socket.on('JOIN_GAME', data=>{
-        socket.join(data.gameId)
-        const gameToJoin = games.find(x=>x.game.id === data.gameId)
+    socket.on('JOIN_GAME', connectionData=>{
+        socket.join(connectionData.gameId)
+        const gameToJoin = games.find(x=>x.game.id === connectionData.gameId)
         if(!gameToJoin){
-            socket.emit('WRONG_ID_404')
+            socket.emit('ERROR', '404')
             return
         }
-        socket.join(gameToJoin[data.gameId])
+        socket.join(gameToJoin[connectionData.gameId])
         let joinedUser
         if(gameToJoin.users.filter(user=>user.role === 'player').length < 2){
-            joinedUser = new User(data.id, data.name, 'player')
+            joinedUser = new User(connectionData.id, connectionData.name, 'player')
         }else{
-            joinedUser = new User(data.id, data.name, 'spectator')
+            joinedUser = new User(connectionData.id, connectionData.name, 'spectator')
         }
-        gameToJoin.users.push(joinedUser)
+        if(!gameToJoin.users.find(x=>x.id === joinedUser.id)){
+            gameToJoin.users.push(joinedUser)
+            socket.to(connectionData.gameId).emit('USER_JOIN', joinedUser)
+        }else{
+            socket.to(connectionData.gameId).emit('USER_RETURNED', joinedUser)
+            gameToJoin.users.find(x=>x.id === joinedUser.id).status = 'online'
+        }
         socket.emit('JOINED', gameToJoin.users)
-        socket.to(data.gameId).emit('USER_JOIN', joinedUser)
-
         socket.on('disconnect', ()=>{
-            gameToJoin.users.find(x=>x.id === joinedUser.id).disconencted()
-            socket.to(data.gameId).emit('USER_DISCONNECTED', joinedUser)
+            gameToJoin.users.find(x=>x.id === joinedUser.id).status = 'disconnected'
+            socket.to(connectionData.gameId).emit('USER_DISCONNECTED', joinedUser)
         })
 
     })
-    socket.on('CREATE_GAME', data=>{
-        games.push({game:new Game(data), users:[] })
+    socket.on('CREATE_GAME', gameData=>{
+        games.push({game:new Game(gameData), users:[] })
     })
     console.log(socket.id.slice(0,5)+'... '+'connected')
 })
