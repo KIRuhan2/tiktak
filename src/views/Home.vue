@@ -90,9 +90,11 @@ export default {
       const id = this.createId()
       console.log(id)
       this.socket.emit('CREATE_GAME', {
-        id,
         fieldSize: this.fieldSize,
         winCondition: this.winCondition,
+        hostName: this.$store.state.name,
+        gameId: id,
+        hostId: this.$store.state.id,
       })
       this.socket.close()
       this.$router.push('game/'+id)

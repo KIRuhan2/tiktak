@@ -142,8 +142,8 @@ export default {
     joinGame(){
       this.socket.emit('JOIN_GAME', {
         gameId : this.gameId, 
-        name: this.name,
-        id: this.id,
+        hostId: this.id,
+        hostName: this.name,
       })
     },
     userColor(status){
