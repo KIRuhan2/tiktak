@@ -32,7 +32,7 @@
 </template>
 
 <script>
-import field from '@/components/field.vue'
+import field from '@/components/Field.vue'
 
 export default {
   name: 'app',
