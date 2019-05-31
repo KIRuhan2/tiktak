@@ -11,7 +11,7 @@
           <button @click="newGameOptions = !newGameOptions" class = "button">Create game</button>
         </li>
         <li>
-          <button class = "button">Search for game</button>
+          <button @click="$router.push('/list')" class = "button">Search for game</button>
         </li>
         <li>
           <button @click="$router.push('game/solo')" class = "button">Take a game</button>
