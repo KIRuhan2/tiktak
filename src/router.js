@@ -25,7 +25,7 @@ export default new Router({
       name: 'list',
       component: List,
       props: true
-    },    
+    }
 
   ]
 })

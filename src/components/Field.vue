@@ -1,15 +1,15 @@
 <template>
-    <div class="field">
-        <div v-for="(row, rowIndex) in matrix" :key="rowIndex" class="row">
-            <div v-for="(cell, cellIndex) in matrix[rowIndex]" :key="cellIndex"
-            :class="['cell',cellDisabled,cellStatus(rowIndex,cellIndex)]"
-            @click="makeTurn(rowIndex,cellIndex)"
-            :style="{width:`${options.cellSize}px`, height:`${options.cellSize}px`}"
-            >
-              <div class="line" :style="lineStyle(rowIndex, cellIndex)"></div>
-            </div>
+  <div class="field">
+    <div v-for="(row, rowIndex) in matrix" :key="rowIndex" class="row">
+        <div v-for="(cell, cellIndex) in matrix[rowIndex]" :key="cellIndex"
+        :class="['cell',cellDisabled,cellStatus(rowIndex,cellIndex)]"
+        @click="makeTurn(rowIndex,cellIndex)"
+        :style="{width:`${options.cellSize}px`, height:`${options.cellSize}px`}"
+        >
+          <div class="line" :style="lineStyle(rowIndex, cellIndex)"></div>
         </div>
     </div>
+  </div>
 </template>
 <script>
 import io from 'socket.io-client'
@@ -36,7 +36,6 @@ export default {
   },
   methods: {
     defaultCellSize (matrixSize = 3) {
-      console.log(matrixSize)
       let maxWithWidth = this.window.width / matrixSize - 10
       let maxWithHeight = (this.window.height - 140) / matrixSize
       maxWithWidth = maxWithWidth > 100 ? 100 : maxWithWidth < 20 ? 20 : maxWithWidth
@@ -53,31 +52,31 @@ export default {
 
     lineStyle (i, j) {
       if (!this.crossLine.line.length) return
-      let n = this.options ? this.options.winRow : 3
+      let lineSize = this.options ? this.options.winRow : 3
       let cellSize = this.options.cellSize
       let center = this.crossLine.line[Math.floor(this.crossLine.line.length / 2)]
       let direction = this.crossLine.direction
-      if (center[0] === i && center[1] === j) {
-        let LineStyle = function (width, rotate, height = cellSize / 8) {
-          this.width = width - cellSize / 2 + 'px'
-          this.height = height + 'px'
-          this.transform = `rotate(${rotate || 0}deg)`
-          this.backgroundColor = '#000'
-          if (n % 2 === 0) {
-            let translate = {
-              diagonalRight: `translate(-${cellSize / 2}px, ${cellSize / 2}px) rotate(${rotate || 0}deg)`,
-              diagonalLeft: `translate(-${cellSize / 2}px, -${cellSize / 2}px) rotate(${rotate || 0}deg)`,
-              row: `translateX(-${cellSize / 2}px)`,
-              column: `translateY(-${cellSize / 2}px) rotate(90deg)`
-            }
-            this.transform = translate[direction]
+      function PresetLineSize (width, rotate, lineSize, height = cellSize / 8) {
+        this.width = width - cellSize / 2 + 'px'
+        this.height = height + 'px'
+        this.backgroundColor = '#000'
+        this.transform = `rotate(${rotate || 0}deg)`
+        if (lineSize % 2 === 0) {
+          let translate = {
+            diagonalRight: `translate(-${cellSize / 2}px, ${cellSize / 2}px) rotate(${rotate || 0}deg)`,
+            diagonalLeft: `translate(-${cellSize / 2}px, -${cellSize / 2}px) rotate(${rotate || 0}deg)`,
+            row: `translateX(-${cellSize / 2}px)`,
+            column: `translateY(-${cellSize / 2}px) rotate(90deg)`
           }
+          this.transform = translate[direction]
         }
+      }      
+      if (center[0] === i && center[1] === j){
         let options = {
-          diagonalRight: new LineStyle(Math.sqrt(2 * (cellSize * n) ** 2), -45),
-          diagonalLeft: new LineStyle(Math.sqrt(2 * (cellSize * n) ** 2), 45),
-          row: new LineStyle(cellSize * n),
-          column: new LineStyle(cellSize * n, 90)
+          diagonalRight: new PresetLineSize(Math.sqrt(2 * (cellSize * lineSize) ** 2), -45),
+          diagonalLeft: new PresetLineSize(Math.sqrt(2 * (cellSize * lineSize) ** 2), 45),
+          row: new PresetLineSize(cellSize * lineSize),
+          column: new PresetLineSize(cellSize * lineSize, 90)
         }
         return options[direction]
       }
@@ -117,7 +116,7 @@ export default {
       arr.forEach((x, index) => { win.indexes[0].push([i + (n - 1) - index, j - (n - 1) + index]) }) // diagonal 1
       arr.forEach((x, index) => { win.indexes[1].push([i - (n - 1) + index, j - (n - 1) + index]) }) // diagonal 2
       arr.forEach((x, index) => { win.indexes[2].push([i, j - (n - 1) + index]) }) // row
-      arr.forEach((x, index) => { win.indexes[3].push([i - (n - 1) + index, j ]) }) // column
+      arr.forEach((x, index) => { win.indexes[3].push([i - (n - 1) + index, j]) }) // column
 
       win.status[0] =
         arr.map((x, index) => mfind(this.matrix, i + (n - 1) - index, j - (n - 1) + index)).join('').replace(/false/g, 'f')

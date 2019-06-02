@@ -34,8 +34,8 @@
               <option value="open">Open</option>
               <option value="close">Invitation Only</option>
             </select>
-        </div>        
-        <button @click="createGame" class="button button_small">Create</button> 
+        </div>
+        <button @click="createGame" class="button button_small">Create</button>
       </div>
     </div>
   </div>
@@ -43,29 +43,28 @@
 
 <script>
 import io from 'socket.io-client'
-import Game from '@/views/Game.vue'
 
 import SideSettings from '@/components/SideSettings.vue'
-import {functions} from '@/mixins/functions'
+import { functions } from '@/mixins/functions'
 
 export default {
   name: 'home',
-  components:{
+  components: {
     SideSettings
   },
   mixins: [functions],
   data () {
     return {
       gameType: 'open',
-      fieldSize:3,
+      fieldSize: 3,
       winCondition: 3,
       newGameOptions: false,
       socket: io('localhost:3001')
 
     }
   },
-  computed:{
-    // Think i dont neet it yet 
+  computed: {
+    // Think i dont neet it yet
     // validate(){
     //   function validateParam(num){
     //     if (typeof num === 'number' && num >= 3)
@@ -77,15 +76,15 @@ export default {
     //   return {
     //     gameType: 'open',
     //     fieldSize: validateParam(this.fieldSize),
-    //     winCondition: validateParam(this.winCondition),        
+    //     winCondition: validateParam(this.winCondition),
     //   }
 
     // }
   },
 
-  methods:{
-    createGame(){
-      if(this.fieldSize < 3 || this.winCondition < 3) return
+  methods: {
+    createGame () {
+      if (this.fieldSize < 3 || this.winCondition < 3) return
 
       const id = this.createId()
       console.log(id)
@@ -94,10 +93,10 @@ export default {
         winCondition: this.winCondition,
         hostName: this.$store.state.name,
         gameId: id,
-        hostId: this.$store.state.id,
+        hostId: this.$store.state.id
       })
       this.socket.close()
-      this.$router.push('game/'+id)
+      this.$router.push('game/' + id)
     }
   }
 }
@@ -115,7 +114,6 @@ export default {
     width: 10em;
     margin-bottom: .5em;
   }
-
 
   .title{
     margin: 0 auto;
@@ -149,8 +147,6 @@ export default {
     border-bottom: 1px solid #000;
   }
 
-
-  
   .newGameOptions button{
     margin: 0 auto;
   }

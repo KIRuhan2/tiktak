@@ -6,8 +6,7 @@ import './styles/style.css'
 
 export const EventBus = new Vue()
 
-Vue.config.productionTip = false
-
+// Vue.config.productionTip = false
 
 new Vue({
   router,

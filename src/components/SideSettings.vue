@@ -40,49 +40,49 @@
     </div>
 </template>
 <script>
-import { EventBus } from '../main';
+// import { EventBus } from '../main'
 export default {
-    name:'sideSettings',
-    data: function(){
-        return{
-            settings: {
-                status: false,
-                rotate: 0
-            },
-        }
-    },
-    computed: {
-      predictMatrixSize(){
-        return this.$store.state.settings.field.matrixSize
-      },
-      predictWinCondition(){
-        return this.$store.state.settings.field.winCondition
+  name: 'sideSettings',
+  data: function () {
+    return {
+      settings: {
+        status: false,
+        rotate: 0
       }
-    },
-    methods:{
-        resetGame(){
-          this.$emit('reset')
-        },
-        settingsClick () {
-          this.settings.rotate += this.settings.status ? -90 : 90
-          this.settings.status = !this.settings.status
-        },
-        setWinCondition(winCondition){
-          this.$store.commit('setWinCondition', winCondition)
-        },
-        setMatrixSize(matrixSize){
-          this.$store.commit('setMatrixSize', matrixSize)
-        },
-
-    },
-    mounted(){
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          this.settingsClick()
-          document.querySelector('button.settings').focus()
-        }
-      })
     }
+  },
+  computed: {
+    predictMatrixSize () {
+      return this.$store.state.settings.field.matrixSize
+    },
+    predictWinCondition () {
+      return this.$store.state.settings.field.winCondition
+    }
+  },
+  methods: {
+    resetGame () {
+      this.$emit('reset')
+    },
+    settingsClick () {
+      this.settings.rotate += this.settings.status ? -90 : 90
+      this.settings.status = !this.settings.status
+    },
+    setWinCondition (winCondition) {
+      this.$store.commit('setWinCondition', winCondition)
+    },
+    setMatrixSize (matrixSize) {
+      this.$store.commit('setMatrixSize', matrixSize)
+    }
+
+  },
+  mounted () {
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.settingsClick()
+        document.querySelector('button.settings').focus()
+      }
+    })
+  }
 }
 </script>
 <style scoped>
@@ -174,9 +174,6 @@ export default {
   transform: translateX(0);
 }
 
-
-
-
 .sidepanel__option{
   margin-bottom: 25px;
 }
@@ -195,7 +192,7 @@ export default {
 .numberValueError{
   color: #ff0000;
   padding-left: 5px;
-  font-size: 36px; 
+  font-size: 36px;
 }
 
 button{
@@ -210,6 +207,4 @@ button{
   cursor: pointer;
 }
 
-
 </style>
-

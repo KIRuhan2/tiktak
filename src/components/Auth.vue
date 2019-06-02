@@ -11,29 +11,28 @@
     </div>
 </template>
 <script>
-import {functions} from '@/mixins/functions'
+import { functions } from '@/mixins/functions'
 import { EventBus } from '@/main.js'
 
 export default {
-    name:'Auth',
-    mixins:[functions],
-    data(){
-        return{
-            inputName: ''
-        }
-    },
-    methods:{
-        submit(){
-            let id = this.createId()
-            if(this.inputName === '')
-                this.inputName = 'Guest#'+Array(4).fill().map(x=>Math.floor(Math.random()*10)).join('')          
-            localStorage.setItem('name', this.inputName)
-            localStorage.setItem('id', id)
-            this.$store.commit('setName', this.inputName)
-            this.$store.commit('setId', id)
-            EventBus.$emit('Logined', {name:this.inputName, id})
-        }
+  name: 'Auth',
+  mixins: [functions],
+  data () {
+    return {
+      inputName: ''
     }
+  },
+  methods: {
+    submit () {
+      let id = this.createId()
+      if (this.inputName === '') { this.inputName = 'Guest#' + Array(4).fill().map(x => Math.floor(Math.random() * 10)).join('') }
+      localStorage.setItem('name', this.inputName)
+      localStorage.setItem('id', id)
+      this.$store.commit('setName', this.inputName)
+      this.$store.commit('setId', id)
+      EventBus.$emit('Logined', { name: this.inputName, id })
+    }
+  }
 }
 </script>
 <style scoped>
@@ -73,4 +72,3 @@ legend{
     font-size: 18px;
 }
 </style>
-

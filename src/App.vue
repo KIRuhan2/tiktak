@@ -19,30 +19,30 @@ export default {
   components: {
     Auth
   },
-  data(){
-    return{
-      authOk: false,
+  data () {
+    return {
+      authOk: false
     }
   },
-  computed:{
-    name(){
+  computed: {
+    name () {
       return this.$store.state.name
     },
-    id(){
+    id () {
       return this.$store.state.id
     }
   },
-  mounted(){
+  mounted () {
     EventBus.$on('Logined', this.logined)
   },
-  methods:{
-    logined(){
+  methods: {
+    logined () {
       this.authOk = true
     }
   },
-  created(){
-    this.$store.commit('setName',localStorage.getItem('name') )
-    this.$store.commit('setId',localStorage.getItem('id') )
+  created () {
+    this.$store.commit('setName', localStorage.getItem('name'))
+    this.$store.commit('setId', localStorage.getItem('id'))
     this.authOk = !!this.id && !!this.name
   }
 

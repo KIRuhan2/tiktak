@@ -1,8 +1,11 @@
-const app = require('express')()
-const server = app.listen(3001, ()=>{
-    console.log('Server is running on localhost:3001')
-})
+const express = require('express')
+const path = require('path')
+const app = express()
 
+
+const server = app.listen(process.env.PORT || 3001, ()=>{
+    console.log('Server works on localhost:3001')
+})
 const io = require('socket.io')(server)
 
 class Game{
@@ -55,7 +58,10 @@ io.on('connection', socket=>{
             socket.to(connectionData.gameId).emit('USER_RETURNED', joinedUser)
             gameToJoin.users.find(x=>x.id === joinedUser.id).status = 'online'
         }
-        socket.emit('JOINED', gameToJoin.users)
+        socket.emit('JOINED', {
+            users: gameToJoin.users,
+            joinedUser 
+        })
         socket.on('disconnect', ()=>{
             gameToJoin.users.find(x=>x.id === joinedUser.id).status = 'disconnected'
             socket.to(connectionData.gameId).emit('USER_DISCONNECTED', joinedUser)

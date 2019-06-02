@@ -7,7 +7,7 @@
       </div>
         <div v-if="restartButton" @click="resetGame" class="restart">Reset</div>
     </div>
-    <div ref="main" class = "main">    
+    <div ref="main" class = "main">
       <div v-if="gameAwait && !error.isError" class="status">
         <p>Waiting for another player: </p>
         <p>Players: <span style="color:green">{{players.length}}</span></p>
@@ -21,7 +21,7 @@
           <li v-for="(spectator, index) in spectators" :key="index">
             <span :style="{color:userColor(spectator.status)}">{{spectator.name || 'No Name'}}: {{spectator.id.slice(0,5)+'...'}}</span>
           </li>
-        </ul>          
+        </ul>
         <p>Link to share: {{origin}}/{{$route.params.id}}</p>
       </div>
       <Field v-if="gameOn" :style="{float: fieldOverflow || 'none'}" ref = "field" :socket="socket" :options="fieldSettings" @GameEnd="gameEnd" />
@@ -47,10 +47,11 @@ export default {
       gameID: 0,
       gameOn: false,
       gameAwait: false,
-      users:[],
-      error:{
-        isError:false,
-        desc:''
+      users: [],
+      userRole: undefined,
+      error: {
+        isError: false,
+        desc: ''
       },
       fieldSettings: {
         cellSize: 100,
@@ -85,74 +86,73 @@ export default {
     this.fieldSettings.cellSize = this.defaultCellSize()
     window.addEventListener('resize', this.resizeHandler)
 
-    if(this.id){
+    if (this.id) {
       this.joinGame()
-    }else{
+    } else {
       EventBus.$on('Logined', this.joinGame)
     }
 
-    this.socket.on('ERROR', errorDesc=>{
-      if(errorDesc === '404' && this.$route.params.id === 'solo') return
+    this.socket.on('ERROR', errorDesc => {
+      if (errorDesc === '404' && this.$route.params.id === 'solo') return
       this.error.isError = true
       this.error.desc = errorDesc
     })
-    this.socket.on('JOINED', users=>{
+    this.socket.on('JOINED', usersData => {
       this.error.isError = false
       this.gameAwait = true
-      this.users = users
+      this.users = usersData.users
+      this.userRole = usersData.joinedUser.role
       console.log('Am Joined')
     })
-    this.socket.on('USER_DISCONNECTED', user=>{
-      this.users.find(x=>x.id === user.id).status = 'disconnected'
-
+    this.socket.on('USER_DISCONNECTED', user => {
+      this.users.find(x => x.id === user.id).status = 'disconnected'
     })
-    this.socket.on('USER_RETURNED', user=>{
+    this.socket.on('USER_RETURNED', user => {
       console.log('Someone is back')
-      this.users.find(x=>x.id === user.id).status = 'online'
+      this.users.find(x => x.id === user.id).status = 'online'
     })
-    this.socket.on('USER_JOIN', user=>{
+    this.socket.on('USER_JOIN', user => {
       console.log('Someone Joined')
       this.users.push(user)
     })
-
   },
-  computed:{
-    origin(){
+  computed: {
+    origin () {
       return window.location.origin
     },
-    players(){
-      return this.users.filter(x=>x.role==='player')
+    players () {
+      return this.users.filter(x => x.role === 'player')
     },
-    spectators(){
-      return this.users.filter(x=>x.role==='spectator')
+    spectators () {
+      return this.users.filter(x => x.role === 'spectator')
     },
-    name(){
+    name () {
       return this.$store.state.name
     },
-    id(){
+    id () {
       return this.$store.state.id
     },
-    settings(){
+    settings () {
       return this.$store.state.settings
     }
 
   },
 
   methods: {
-    joinGame(){
+    joinGame () {
       this.socket.emit('JOIN_GAME', {
-        gameId : this.gameId, 
+        gameId: this.gameId,
         hostId: this.id,
-        hostName: this.name,
+        hostName: this.name
       })
     },
-    userColor(status){
+    userColor (status) {
       return status === 'disconnected' ? 'red' : 'black'
     },
     fieldOverflowHandle () {
       if (this.$refs.main) {
         return this.$refs.main.innerWidth > window.width ? 'left' : 'none'
-      }else {
+      } else {
         return 'none'
       }
     },
@@ -174,7 +174,7 @@ export default {
       this.restartButton = false
       let predictMatrixSize = this.settings.field.matrixSize
       let predictWinCondition = this.settings.field.winCondition
-      if (predictMatrixSize && predictMatrixSize <= 20 && predictMatrixSize >= 3){
+      if (predictMatrixSize && predictMatrixSize <= 20 && predictMatrixSize >= 3) {
         this.fieldSettings.matrixSize = predictMatrixSize
       }
       if (predictWinCondition >= 3 && predictWinCondition <= 10) {
@@ -253,8 +253,6 @@ button{
   font-size: 48px;
 }
 
-
-
 .cellSizeValue:focus{
   outline: none
 }
@@ -285,7 +283,6 @@ button{
   background: #000; /* Green background */
   cursor: pointer; /* Cursor on hover */
 }
-
 
 .cell{
   position: relative;
