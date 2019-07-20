@@ -87,7 +87,6 @@ export default {
       if (this.fieldSize < 3 || this.winCondition < 3) return
 
       const id = this.createId()
-      console.log(id)
       this.socket.emit('CREATE_GAME', {
         fieldSize: this.fieldSize,
         winCondition: this.winCondition,

@@ -13,6 +13,7 @@
 </template>
 <script>
 import io from 'socket.io-client'
+import { EventBus } from '@/main.js'
 
 export default {
   name: 'field',
@@ -32,6 +33,9 @@ export default {
   computed: {
     cellDisabled () {
       return this.options.disabled ? 'disabled' : ''
+    },
+    gameId(){
+      return this.$store.state.gameId
     }
   },
   methods: {
@@ -46,17 +50,16 @@ export default {
       this.crossLine = { line: [], direction: '' }
       this.turn = 2
     },
-    cellStatus (i, j) {
+    cellStatus(i, j) {
       return ['', 'x', 'o'][this.matrix[i][j]]
     },
-
     lineStyle (i, j) {
       if (!this.crossLine.line.length) return
       let lineSize = this.options ? this.options.winRow : 3
       let cellSize = this.options.cellSize
       let center = this.crossLine.line[Math.floor(this.crossLine.line.length / 2)]
       let direction = this.crossLine.direction
-      function PresetLineSize (width, rotate, lineSize, height = cellSize / 8) {
+      function PresetLineSize (width, rotate, height = cellSize / 8) {
         this.width = width - cellSize / 2 + 'px'
         this.height = height + 'px'
         this.backgroundColor = '#000'
@@ -85,15 +88,20 @@ export default {
       return Array(+this.options.matrixSize || 3).fill(null).map(() => Array(this.options.matrixSize || 3).fill(0))
     },
     makeTurn (i, j) {
+
       const flat = (arr, depth = Infinity, arr2 = []) => {
         arr.forEach(e => {
-          typeof e === 'object' && depth ? flat(e, depth - 1, arr2) : arr2.push(e)
-        })
-        return arr2
-      }
+          typeof e === 'object' && depth ? flat(e, depth - 1, arr2) : arr2.push(e);
+        });
+        return arr2;
+      };
 
       if (this.cellStatus(i, j)) return
       if (this.options.disabled) return
+      this.socket.emit('MAKE_TURN', {
+        cell : [i,j],
+        gameId : this.gameId,
+      });      
       this.matrix[i].splice(j, 1, this.turn)
       this.turn = this.turn === 1 ? 2 : 1
       let winner = this.winStatus(i, j)
@@ -106,11 +114,11 @@ export default {
         status: [ [], [], [], [] ],
         indexes: [ [], [], [], [] ]
       }
-      const mfind = (matrix, i, j) => ((matrix[i] && matrix[i][j]) ? matrix[i][j] : false) // Avoid undefined and 0 values
-      if (!mfind(this.matrix, i, j)) return false
+      const mfind = (matrix, i, j) => ((matrix[i] && matrix[i][j]) ? matrix[i][j] : -1) // Avoid undefined and 0 values
+      if (mfind(this.matrix, i, j) === -1) return false
 
       const cell = mfind(this.matrix, i, j)
-      const cellReg = new RegExp(Array(n).fill(mfind(this.matrix, i, j)).join(''))
+      const cellReg = new RegExp(Array(n).fill(cell).join(''))
       const arr = Array.from({ length: n * 2 - 1 })
 
       arr.forEach((x, index) => { win.indexes[0].push([i + (n - 1) - index, j - (n - 1) + index]) }) // diagonal 1
@@ -119,15 +127,15 @@ export default {
       arr.forEach((x, index) => { win.indexes[3].push([i - (n - 1) + index, j]) }) // column
 
       win.status[0] =
-        arr.map((x, index) => mfind(this.matrix, i + (n - 1) - index, j - (n - 1) + index)).join('').replace(/false/g, 'f')
+        arr.map((x, index) => mfind(this.matrix, i + (n - 1) - index, j - (n - 1) + index)).join('').replace(/-1/g, 'f') // diagonal 1
       win.status[1] =
-        arr.map((x, index) => mfind(this.matrix, i - (n - 1) + index, j - (n - 1) + index)).join('').replace(/false/g, 'f')
+        arr.map((x, index) => mfind(this.matrix, i - (n - 1) + index, j - (n - 1) + index)).join('').replace(/-1/g, 'f') // diagonal 2
 
       win.status[2] =
-        arr.map((x, index) => mfind(this.matrix, i, j - (n - 1) + index)).join('').replace(/false/g, 'f')
+        arr.map((x, index) => mfind(this.matrix, i, j - (n - 1) + index)).join('').replace(/-1/g, 'f') // row
 
       win.status[3] =
-        arr.map((x, index) => mfind(this.matrix, i - (n - 1) + index, j)).join('').replace(/false/g, 'f')
+        arr.map((x, index) => mfind(this.matrix, i - (n - 1) + index, j)).join('').replace(/-1/g, 'f') // column
 
       win.status.forEach((e, i) => {
         if (e.match(cellReg)) {
@@ -151,8 +159,7 @@ export default {
         align-items: center;
         width: 100px;
         height: 100px;
-        will-change: width,height;
-
+        /* will-change: width,height;s */
         background: #fff;
         outline: 1px solid #000;
         background-repeat: no-repeat;

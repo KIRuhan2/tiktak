@@ -7,6 +7,7 @@ export default new Vuex.Store({
   state: {
     id: undefined,
     name: undefined,
+    gameId: undefined,
     settings: {
       field: {
         matrixSize: 3,
@@ -17,6 +18,9 @@ export default new Vuex.Store({
   mutations: {
     setName (state, name) {
       state.name = name
+    },
+    setGameId(state, gameId){
+      state.gameId = gameId
     },
     setId (state, id) {
       state.id = id

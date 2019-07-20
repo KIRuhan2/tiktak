@@ -24,7 +24,7 @@
         </ul>
         <p>Link to share: {{origin}}/{{$route.params.id}}</p>
       </div>
-      <Field v-if="gameOn" :style="{float: fieldOverflow || 'none'}" ref = "field" :socket="socket" :options="fieldSettings" @GameEnd="gameEnd" />
+      <Field v-if="gameOn" :style="{float: fieldOverflow || 'none'}" ref = "field" :socket="socket" :gameOn="gameOn" :options="fieldSettings" @GameEnd="gameEnd" />
     </div>
   </div>
 </template>
@@ -45,7 +45,7 @@ export default {
     return {
       socket: io('localhost:3001'),
       gameID: 0,
-      gameOn: false,
+      gameOn: true,
       gameAwait: false,
       users: [],
       userRole: undefined,
@@ -58,7 +58,8 @@ export default {
         winRow: 3,
         matrixSize: 3,
         solo: false,
-        disabled: false
+        disabled: false,
+        matrix: []
       },
       window: {
         width: 0,
@@ -91,18 +92,23 @@ export default {
     } else {
       EventBus.$on('Logined', this.joinGame)
     }
+    this.socket.on('GAME_END', data=>{
+      console.log(data)
+    })
 
     this.socket.on('ERROR', errorDesc => {
       if (errorDesc === '404' && this.$route.params.id === 'solo') return
       this.error.isError = true
       this.error.desc = errorDesc
     })
-    this.socket.on('JOINED', usersData => {
+    this.socket.on('JOINED', gameData => {
+      console.log(gameData)
       this.error.isError = false
       this.gameAwait = true
-      this.users = usersData.users
-      this.userRole = usersData.joinedUser.role
-      console.log('Am Joined')
+      this.fieldSettings.matrix = gameData.matrix
+      this.users = [...gameData.users]
+      this.userRole = gameData.joinedUser.role
+      this.$store.commit('setGameId', gameData.gameId)
     })
     this.socket.on('USER_DISCONNECTED', user => {
       this.users.find(x => x.id === user.id).status = 'disconnected'
@@ -114,6 +120,9 @@ export default {
     this.socket.on('USER_JOIN', user => {
       console.log('Someone Joined')
       this.users.push(user)
+      if(this.users.length >= 2){
+        this.gameOn = true
+      }      
     })
   },
   computed: {
@@ -134,7 +143,10 @@ export default {
     },
     settings () {
       return this.$store.state.settings
-    }
+    },
+    // gameOn (){
+    //   return  this.users.length >= 2
+    // }
 
   },
 

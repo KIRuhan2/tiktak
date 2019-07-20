@@ -142,6 +142,8 @@ describe('Field Win Status', () => {
     expect(field.methods.winStatus.apply(data, [0, 0])).toBe(r)
     expect(field.methods.winStatus.apply(data, [1, 0])).toBe(r)
     expect(field.methods.winStatus.apply(data, [2, 0])).toBe(r)
+    expect(data.crossLine.line).toEqual([[ 0, 0 ], [ 1, 0 ], [ 2, 0 ]])
+
 
     data.matrix = [
       [r, 0, 0],
@@ -150,6 +152,8 @@ describe('Field Win Status', () => {
       [r, 0, 0]
     ]
     expect(field.methods.winStatus.apply(data, [0, 0, 4])).toBe(r)
+    expect(data.crossLine.line).toEqual([[ 0, 0 ], [ 1, 0 ], [ 2, 0 ], [3, 0]])
+
 
     data.matrix = [
       [r, 0, 0],
