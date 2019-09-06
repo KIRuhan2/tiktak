@@ -21,13 +21,13 @@ export default {
   data: function () {
     return {
       socket: io('localhost:3001'),
-      turn: 2,
       matrix: [],
       crossLine: { line: [], direction: '' }
     }
   },
 
   mounted () {
+    console.log('Filed')
     this.matrix = this.makeMatrix(this.options ? this.options.matrixSize : 3)
   },
   computed: {
@@ -36,6 +36,9 @@ export default {
     },
     gameId(){
       return this.$store.state.gameId
+    },
+    id(){
+      return this.$store.state.id
     }
   },
   methods: {
@@ -45,10 +48,13 @@ export default {
       maxWithWidth = maxWithWidth > 100 ? 100 : maxWithWidth < 20 ? 20 : maxWithWidth
       return Math.floor(Math.min(maxWithHeight, maxWithWidth))
     },
-    restartGame () {
+    restartGame (send) {
       this.matrix = this.makeMatrix(this.options ? this.options.matrixSize : 3)
       this.crossLine = { line: [], direction: '' }
-      this.turn = 2
+      // this.turn = 2
+      if(send){
+        this.socket.emit('RESTART_GAME', this.gameId)
+      }
     },
     cellStatus(i, j) {
       return ['', 'x', 'o'][this.matrix[i][j]]
@@ -87,8 +93,7 @@ export default {
     makeMatrix (n) {
       return Array(+this.options.matrixSize || 3).fill(null).map(() => Array(this.options.matrixSize || 3).fill(0))
     },
-    makeTurn (i, j) {
-
+    makeTurn (i, j, thirdSideTurn) {
       const flat = (arr, depth = Infinity, arr2 = []) => {
         arr.forEach(e => {
           typeof e === 'object' && depth ? flat(e, depth - 1, arr2) : arr2.push(e);
@@ -98,12 +103,16 @@ export default {
 
       if (this.cellStatus(i, j)) return
       if (this.options.disabled) return
-      this.socket.emit('MAKE_TURN', {
-        cell : [i,j],
-        gameId : this.gameId,
-      });      
-      this.matrix[i].splice(j, 1, this.turn)
-      this.turn = this.turn === 1 ? 2 : 1
+      if(!this.options.turnToPlay) return 
+      if(!thirdSideTurn){
+        this.socket.emit('MAKE_TURN', {
+          playerId: this.id,
+          cell : [i,j],
+          gameId : this.gameId,
+        });
+      }      
+      this.matrix[i].splice(j, 1, this.options.turn)
+      // this.turn = this.turn === 1 ? 2 : 1
       let winner = this.winStatus(i, j)
       if (winner || flat(this.matrix).every(x => (x === 1 || x === 2))) {
         this.$emit('GameEnd', winner)

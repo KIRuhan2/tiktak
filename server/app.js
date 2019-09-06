@@ -1,5 +1,4 @@
 const express = require('express')
-const path = require('path')
 const app = express()
 
 
@@ -10,17 +9,23 @@ const io = require('socket.io')(server)
 
 class Game{
     constructor(data){
-        this.matrix = Array(+data.fieldSize || 3).fill(null).map(() => Array(+data.fieldSize || 3).fill(0))
+        this.matrix = Game.makeMatrix(data.fieldSize || 3)
         this.winCondition = data.winCondition
         this.crossLine = { line: [], direction: '' }
         this.turn = 2
+        this.playerToTurn = ''
         this.id = data.gameId
         this.hostId = data.hostId
         this.hostName = data.hostName
+        this.players = []
+    }
+
+    static makeMatrix(size) {
+      return  Array(+size || 3).fill(null).map(() => Array(+size || 3).fill(0))   
     }
 
     cellStatus(i, j){
-        return ['', 'x', 'o'][this.matrix[i][j]]
+      return ['', 'x', 'o'][this.matrix[i][j]]
     }
 
     winStatus (i, j, n = this.options ? this.options.winRow : 3) {
@@ -59,19 +64,34 @@ class Game{
         })
         return Object.values(win.status).find(x => x.match(cellReg)) ? cell : false
       }    
+    restart(){
+      this.matrix = Game.makeMatrix(this.options ? this.options.matrixSize : 3)
+      this.crossLine = { line: [], direction: '' }
+      this.turn = 2
+      io.to(this.id).emit('GAME_RESTARTED')
 
-    makeTurn (i, j) {
-        // this.socket.emit('MAKE_TURN', [i,j]);
+    }
+    makeTurn (playerId, i, j) {
+        if(playerId !== this.playerToTurn) return
         const flat = (arr, depth = Infinity, arr2 = []) => {
           arr.forEach(e => {
             typeof e === 'object' && depth ? flat(e, depth - 1, arr2) : arr2.push(e);
           });
           return arr2;
         };
-
         this.matrix[i].splice(j, 1, this.turn)
-        this.turn = this.turn === 1 ? 2 : 1
-        console.log([i,j])
+            
+
+        let playersIndex = this.players.findIndex(player=> player.id === this.playerToTurn)
+        playersIndex = playersIndex === this.players.length-1 ? -1 : playersIndex
+        this.playerToTurn = this.players[playersIndex+1].id
+        io.to(this.id).emit('TURN', {
+          matrix: this.matrix,
+          position: [i,j],
+          nextPlayer: this.playerToTurn ,
+          side: this.turn,
+        })       
+        this.turn = this.turn === 1 ? 2 : 1             
         let winner = this.winStatus(i, j)
         if (winner || flat(this.matrix).every(x => (x === 1 || x === 2))) {
           io.to(this.id).emit('GAME_END', winner)
@@ -80,11 +100,13 @@ class Game{
 }
 
 class User{
-    constructor(id, name, role){
+    constructor(id, name, role, orderOf){
         this.name = name
         this.id = id
         this.status = 'online'
         this.role = role
+        this.orderOf = orderOf
+        this.firstTurn = false
     }
     disconencted(){
         this.status = 'disconnected'
@@ -105,15 +127,24 @@ io.on('connection', socket=>{
             return
         }
         socket.join(currentRoom[connectionData.gameId])
-        let joinedUser
-        if(currentRoom.users.filter(user=>user.role === 'player').length < 2){
-            joinedUser = new User(connectionData.hostId, connectionData.hostName, 'player')
+        let joinedUserA
+        let players = currentRoom.users.filter(user=>user.role === 'player')
+        if(players.length < 2){
+            joinedUser = new User(connectionData.hostId, connectionData.hostName, 'player', players.length)
+            if(currentRoom.game.playerToTurn === ''){
+              currentRoom.game.playerToTurn = joinedUser.id
+              joinedUser.firstTurn = true
+            }
         }else{
-            joinedUser = new User(connectionData.hostId, connectionData.hostName, 'spectator')
+            joinedUser = new User(connectionData.hostId, connectionData.hostName, 'spectator', players.length)
         }
         
         if(!currentRoom.users.find(x=>x.id === joinedUser.id)){
             currentRoom.users.push(joinedUser)
+            if (joinedUser.role === 'player'){
+              currentRoom.game.players.push(joinedUser)
+            }
+
             socket.to(connectionData.gameId).emit('USER_JOIN', joinedUser)
         }else{
             socket.to(connectionData.gameId).emit('USER_RETURNED', joinedUser)
@@ -123,10 +154,15 @@ io.on('connection', socket=>{
             users: currentRoom.users,
             matrix: currentRoom.game.matrix,
             gameId: connectionData.gameId,
+            playerToTurn: currentRoom.game.playerToTurn,
+            turn: currentRoom.game.turn, 
             joinedUser,
         })
         socket.on('disconnect', ()=>{
             currentRoom.users.find(x=>x.id === joinedUser.id).status = 'disconnected'
+            // if(currentRoom.game.playerToTurn === joinedUser.id){
+            //   currentRoom.game.playerToTurn = ''
+            // }
             socket.to(connectionData.gameId).emit('USER_DISCONNECTED', joinedUser)
         })
     })
@@ -139,9 +175,14 @@ io.on('connection', socket=>{
     })
     socket.on('MAKE_TURN', turnData =>{
         let currentRoom = rooms.find(room => turnData.gameId === room.game.id)
-        console.log(turnData.cell[0], turnData.cell[1])
-        currentRoom.game.makeTurn(turnData.cell[0], turnData.cell[1])
-        console.log(currentRoom.game.matrix)
+        currentRoom.game.makeTurn(turnData.playerId , turnData.cell[0], turnData.cell[1])
     })
-    // console.log(socket.id.slice(0,5)+'... '+'connected')
+    socket.on('RESTART_GAME', gameId=>{
+      let currentRoom = rooms.find(room => gameId === room.game.id)
+      try{
+        currentRoom.game.restart()
+      }catch(error){
+        console.log(error)
+      }
+    })
 })

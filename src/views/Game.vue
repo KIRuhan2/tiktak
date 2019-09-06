@@ -1,15 +1,16 @@
 <template>
-  <div v-if="!error.isError" class="container">
-    <SideSettings @reset="resetGame" />
+  <div class="container">
+    <SideSettings @reset="resetGame(true)" />
     <div class="highText">
       <div class="winStatus">
         <span v-if="highText">{{highText}}</span> <span :class="winnerClass !== '' ? (winnerClass+' cell') :'' "></span>
       </div>
-        <div v-if="restartButton" @click="resetGame" class="restart">Reset</div>
+        <div v-if="restartButton" @click="resetGame(true)" class="restart">Reset</div>
     </div>
     <div ref="main" class = "main">
-      <div v-if="gameAwait && !error.isError" class="status">
+      <div class="status">
         <p>Waiting for another player: </p>
+        <p>Очередность: {{userOrder}}</p>
         <p>Players: <span style="color:green">{{players.length}}</span></p>
         <ul style="padding-left:70px;">
           <li v-for="(player, index) in players" :key="index">
@@ -24,7 +25,7 @@
         </ul>
         <p>Link to share: {{origin}}/{{$route.params.id}}</p>
       </div>
-      <Field v-if="gameOn" :style="{float: fieldOverflow || 'none'}" ref = "field" :socket="socket" :gameOn="gameOn" :options="fieldSettings" @GameEnd="gameEnd" />
+      <Field :style="{float: fieldOverflow || 'none'}" ref = "field" :socket="socket" :gameOn="gameOn" :options="fieldSettings" @GameEnd="gameEnd" />
     </div>
   </div>
 </template>
@@ -45,9 +46,9 @@ export default {
     return {
       socket: io('localhost:3001'),
       gameID: 0,
-      gameOn: true,
-      gameAwait: false,
+      gameOn: false, 
       users: [],
+      userOrder: undefined,
       userRole: undefined,
       error: {
         isError: false,
@@ -56,6 +57,8 @@ export default {
       fieldSettings: {
         cellSize: 100,
         winRow: 3,
+        turnToPlay: false,
+        turn: 2,
         matrixSize: 3,
         solo: false,
         disabled: false,
@@ -74,6 +77,7 @@ export default {
     }
   },
   mounted () {
+    console.log('Game')
     this.gameId = this.$route.params.id
     if (this.gameId === 'solo') {
       this.fieldOverflowHandle.solo = true
@@ -92,8 +96,8 @@ export default {
     } else {
       EventBus.$on('Logined', this.joinGame)
     }
-    this.socket.on('GAME_END', data=>{
-      console.log(data)
+    this.socket.on('GAME_RESTARTED', data=>{
+      this.resetGame()
     })
 
     this.socket.on('ERROR', errorDesc => {
@@ -102,13 +106,29 @@ export default {
       this.error.desc = errorDesc
     })
     this.socket.on('JOINED', gameData => {
-      console.log(gameData)
-      this.error.isError = false
-      this.gameAwait = true
-      this.fieldSettings.matrix = gameData.matrix
-      this.users = [...gameData.users]
-      this.userRole = gameData.joinedUser.role
-      this.$store.commit('setGameId', gameData.gameId)
+      this.$nextTick(()=>{
+        this.userOrder = gameData.joinedUser.orderOf
+        this.fieldSettings.turn = gameData.turn
+        this.fieldSettings.turnToPlay = gameData.joinedUser.firstTurn
+        if(gameData.playerToTurn === this.id){
+          this.fieldSettings.turnToPlay = true
+        }
+        console.log(gameData)
+        this.error.isError = false
+        console.log(gameData.matrix)
+        gameData.matrix.forEach((row,i)=>{
+          row.forEach((cell,j)=>{
+            this.$refs.field.matrix[i].splice(j, 1, cell)
+          })
+        })
+        this.users = [...gameData.users]
+        if(this.users.length >=2){
+          this.gameOn = true
+        }
+        this.userRole = gameData.joinedUser.role
+        this.$store.commit('setGameId', gameData.gameId)
+      })
+
     })
     this.socket.on('USER_DISCONNECTED', user => {
       this.users.find(x => x.id === user.id).status = 'disconnected'
@@ -123,6 +143,19 @@ export default {
       if(this.users.length >= 2){
         this.gameOn = true
       }      
+    })
+    this.socket.on('TURN', data=>{
+      this.$nextTick(()=>{
+        if(data.nextPlayer === this.id){
+          this.fieldSettings.turnToPlay = true
+          this.$refs.field.makeTurn(data.position[0], data.position[1], true)
+        }else{
+          this.fieldSettings.turnToPlay = false     
+        }
+        this.fieldSettings.turn = this.fieldSettings.turn === 1 ? 2 : 1
+        // }
+      })
+
     })
   },
   computed: {
@@ -179,7 +212,7 @@ export default {
       this.window.height = window.innerHeight - 25
     },
 
-    resetGame () {
+    resetGame (send) {
       this.highText = ''
       this.winnerClass = ''
       this.fieldSettings.disabled = false
@@ -193,7 +226,7 @@ export default {
         this.fieldSettings.winRow = predictWinCondition
       }
       this.fieldSettings.cellSize = this.defaultCellSize()
-      this.$refs.field.restartGame()
+      this.$refs.field.restartGame(send)
     },
     gameEnd (winner) {
       this.highText = winner === false ? 'Draw!' : 'Win!'
